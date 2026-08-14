@@ -26,6 +26,25 @@ docker compose down
 
 Configure provider settings after startup through the Web UI. Public deployments require the Nginx session login first. DSH watches user configuration and credential files under `config/`; changes apply to subsequent requests without restarting the container. `.env` contains Compose-only settings such as the host port and Nginx trusted host.
 
+## Ports
+
+Only two host ports are ever published, both defined once in `.env`:
+
+```env
+DSH_PORT=3080   # DSH Web UI, published on host 127.0.0.1
+AUTH_PORT=8081  # login/session service, published on host 127.0.0.1
+```
+
+- The Compose publish mapping and DSH's trust fence (`--trusted-host`) both read `DSH_PORT` automatically; no other file needs editing.
+- Container-internal ports are private constants that are never published and can be ignored when changing ports: socat `3080` → `dsh web` `3081` inside the DSH container, `8081` inside the auth container.
+- Nginx is the only host-side file to sync. Its port literals are centralized in the constants block at the top of `nginx/dsh.conf.example` (two `set` lines mirroring `.env`); or let `.env` stay the single source of truth by rendering:
+
+```sh
+./scripts/render-nginx-conf.sh | sudo tee /etc/nginx/sites-available/dsh.conf
+```
+
+Port-change procedure: edit `.env` → `docker compose up -d` → re-render (or sync the constants block) → `sudo nginx -t && sudo systemctl reload nginx`.
+
 ## Public deployment
 
 Public deployment requires a DNS record, a TLS certificate, Nginx, and an authenticated reverse proxy. Do not expose the Docker port directly to the Internet.
@@ -53,7 +72,7 @@ Start DSH and the login service, and keep the host ports bound to localhost:
 docker compose up -d --build
 ```
 
-Use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as the reverse-proxy starting point, then set its `server_name`, TLS certificate paths, and HTTPS listener, and reload Nginx:
+Use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as the reverse-proxy starting point (ports — see “Ports” above), then set its `server_name`, TLS certificate paths, and HTTPS listener, and reload Nginx:
 
 ```sh
 sudo nginx -t

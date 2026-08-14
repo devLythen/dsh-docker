@@ -14,6 +14,8 @@ services:
   # Session-auth login service behind the host Nginx `auth_request`.
   # Sessions are in-memory and expire after AUTH_TTL_HOURS (default 24);
   # restarting this container logs every session out immediately.
+  # The container listens on 8081 (private constant); the host side is
+  # published to loopback under AUTH_PORT from .env.
   auth:
     image: node:24-bookworm-slim
     user: node
@@ -27,5 +29,5 @@ services:
       AUTH_PORT: "8081"
       AUTH_PASSWORD: ${AUTH_PASSWORD:?AUTH_PASSWORD must be set in .env}
     ports:
-      - "127.0.0.1:8081:8081"
+      - "127.0.0.1:${AUTH_PORT:-8081}:8081"
     restart: unless-stopped

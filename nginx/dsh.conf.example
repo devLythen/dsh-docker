@@ -2,9 +2,16 @@
 #
 # Every request must carry a valid dsh_session cookie; Nginx checks it with an
 # internal `auth_request` subrequest against the `auth` compose service
-# (127.0.0.1:8081, loopback-only). Requests without a valid cookie are
-# redirected to /login/. Sessions expire after AUTH_TTL_HOURS (default 24)
-# and never survive an `auth` service restart.
+# (loopback-only). Requests without a valid cookie are redirected to /login/.
+# Sessions expire after AUTH_TTL_HOURS (default 24) and never survive an
+# `auth` service restart.
+#
+# Ports are centralized in the constants block below — the ONLY port literals
+# in this file. They mirror DSH_PORT / AUTH_PORT from .env; run
+#   ./scripts/render-nginx-conf.sh | sudo tee /etc/nginx/sites-available/dsh.conf
+# to render from .env so it stays the single source of truth. Container-side
+# ports (socat 3080 -> dsh web 3081, auth 8081) are private and never appear
+# on the host.
 #
 # Before reloading, set `server_name`, the TLS certificate paths, and the
 # HTTPS listener (the file below starts as the plain-HTTP baseline).
@@ -15,12 +22,18 @@ server {
     listen 80;
     server_name dsh.example.com;
 
+    # ---- Ports: the only port literals in this file ----------------------
+    # Keep in sync with DSH_PORT / AUTH_PORT in .env (render-nginx-conf.sh
+    # rewrites exactly these two lines).
+    set $dsh_backend 127.0.0.1:3080;   # .env DSH_PORT
+    set $auth_backend 127.0.0.1:8081;  # .env AUTH_PORT
+
     # ---- Session authentication (docker-compose `auth` service) ----
 
     # internal auth subrequest: 200 = valid session, 401 = login required
     location = /auth {
         internal;
-        proxy_pass http://127.0.0.1:8081/auth;
+        proxy_pass http://$auth_backend/auth;
         proxy_pass_request_body off;
         proxy_set_header Content-Length "";
         proxy_set_header Cookie $http_cookie;
@@ -28,7 +41,7 @@ server {
 
     # login page and session endpoints of the auth service
     location /login/ {
-        proxy_pass http://127.0.0.1:8081;
+        proxy_pass http://$auth_backend;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -47,15 +60,17 @@ server {
         auth_request /auth;
         error_page 401 = @login;
 
-        proxy_pass http://127.0.0.1:3080;
+        proxy_pass http://$dsh_backend;
         proxy_http_version 1.1;
         proxy_buffering off;
         proxy_read_timeout 3600s;
 
         # The authenticated proxy is the trust boundary. DSH's privileged
-        # settings and credentials APIs remain loopback-only.
-        proxy_set_header Host 127.0.0.1:3080;
-        proxy_set_header Origin http://127.0.0.1:3080;
+        # settings and credentials APIs remain loopback-only. Host and Origin
+        # derive from the constants block above, so they always match the
+        # port in proxy_pass.
+        proxy_set_header Host $dsh_backend;
+        proxy_set_header Origin http://$dsh_backend;
         proxy_set_header X-Forwarded-Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

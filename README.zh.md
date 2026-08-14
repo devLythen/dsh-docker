@@ -26,6 +26,25 @@ docker compose down
 
 启动后，通过 Web UI 配置提供方。公网部署需要先通过 Nginx 的会话登录页。DSH 会监视 `config/` 下的用户配置和凭据文件；修改后会作用于后续请求，不需要重启容器。`.env` 只保存宿主端口、Nginx 信任主机等 Compose 配置。
 
+## 端口配置
+
+宿主机上对外只发布两个端口，统一定义在 `.env`：
+
+```env
+DSH_PORT=3080   # DSH Web UI，发布到宿主 127.0.0.1
+AUTH_PORT=8081  # 登录/会话服务，发布到宿主 127.0.0.1
+```
+
+- Compose 的发布映射和 DSH 的信任围栏（`--trusted-host`）都会自动读取 `DSH_PORT`，不需要改其他文件。
+- 容器内部端口是私有常量、不对外发布，改端口时无需理会：DSH 容器内 socat `3080` → `dsh web` `3081`，认证服务容器内 `8081`。
+- Nginx 是宿主机上唯一需要同步的地方。端口字面量集中写在 `nginx/dsh.conf.example` 顶部的常量块（两行 `set`，与 `.env` 一一对应）；也可以让 `.env` 成为唯一来源，直接渲染安装：
+
+```sh
+./scripts/render-nginx-conf.sh | sudo tee /etc/nginx/sites-available/dsh.conf
+```
+
+改端口流程：修改 `.env` → `docker compose up -d` → 重新渲染（或同步常量块）→ `sudo nginx -t && sudo systemctl reload nginx`。
+
 ## 公网部署
 
 公网部署需要 DNS 记录、TLS 证书、Nginx 和带认证的反向代理。不要将 Docker 端口直接暴露到公网。
@@ -53,7 +72,7 @@ openssl rand -base64 24 | tr '+/' '-_' | tr -d '='
 docker compose up -d --build
 ```
 
-以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点，设置 `server_name`、TLS 证书路径和 HTTPS 监听器，然后重载 Nginx：
+以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点（端口见「端口配置」一节），设置 `server_name`、TLS 证书路径和 HTTPS 监听器，然后重载 Nginx：
 
 ```sh
 sudo nginx -t

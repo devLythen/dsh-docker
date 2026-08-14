@@ -43,7 +43,7 @@ DSH_TRUSTED_HOST=dsh.example.com
 docker compose up -d --build
 ```
 
-将路由器的公网 TCP `443` 转发到服务器内网 TCP `443`。以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点，然后设置 `server_name`、TLS 证书路径和 HTTPS 监听器。
+以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点，然后设置 `server_name`、TLS 证书路径和 HTTPS 监听器。
 
 重载 Nginx 前，先为整个站点启用 Basic Auth：
 

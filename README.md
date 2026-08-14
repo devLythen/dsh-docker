@@ -43,7 +43,7 @@ Start DSH and keep its port bound to localhost:
 docker compose up -d --build
 ```
 
-Configure the router to forward public TCP port `443` to the server's TCP port `443`. Use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as the reverse-proxy starting point, then set its `server_name`, TLS certificate paths, and HTTPS listener.
+Use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as the reverse-proxy starting point, then set its `server_name`, TLS certificate paths, and HTTPS listener.
 
 Protect the entire Nginx site with Basic Auth before reloading it:
 

@@ -4,8 +4,6 @@
 
 ## 快速启动
 
-依赖：Docker Engine 和 Docker Compose。请保留已提交的 `bun.lock`；Docker 构建会复制它，并使用 `bun install --frozen-lockfile` 安装依赖。
-
 ```sh
 cp .env.example .env
 docker compose up -d
@@ -32,11 +30,11 @@ docker compose down
 
 公网部署需要 DNS 记录、TLS 证书、Nginx 和带认证的反向代理。不要将 Docker 端口直接暴露到公网。
 
-在 `.env` 中设置公网 authority。外部端口不是默认 HTTPS 端口时，需要包含端口号：
+在 `.env` 中设置公网 authority：
 
 ```env
 DSH_PORT=3080
-DSH_TRUSTED_HOST=dsh.example.com:738
+DSH_TRUSTED_HOST=dsh.example.com
 ```
 
 启动 DSH，并保持宿主端口只监听本机：
@@ -45,7 +43,7 @@ DSH_TRUSTED_HOST=dsh.example.com:738
 docker compose up -d --build
 ```
 
-将路由器的公网 TCP `738` 转发到服务器内网 TCP `443`。以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点，然后设置 `server_name`、TLS 证书路径和 HTTPS 监听器。
+将路由器的公网 TCP `443` 转发到服务器内网 TCP `443`。以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点，然后设置 `server_name`、TLS 证书路径和 HTTPS 监听器。
 
 重载 Nginx 前，先为整个站点启用 Basic Auth：
 
@@ -56,4 +54,4 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-默认镜像包含 DeepSeek 适配器；其他提供方类型仍需要对应的适配器包和 profile 组合配置。最终公网地址为 `https://dsh.example.com:738`。
+最终公网地址为 `https://dsh.example.com`。

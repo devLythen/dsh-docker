@@ -4,8 +4,6 @@ Docker template for running the DeepSeek Harness Web UI. [简体中文](README.z
 
 ## Quickstart
 
-Requirements: Docker Engine and Docker Compose. Keep `bun.lock` committed; the Docker build copies it and runs `bun install --frozen-lockfile`.
-
 ```sh
 cp .env.example .env
 docker compose up -d
@@ -32,11 +30,11 @@ Configure provider settings after startup through the Web UI. Public deployments
 
 Public deployment requires a DNS record, a TLS certificate, Nginx, and an authenticated reverse proxy. Do not expose the Docker port directly to the Internet.
 
-Set the public authority in `.env`. Include the external port when it is not the default HTTPS port:
+Set the public authority in `.env`:
 
 ```env
 DSH_PORT=3080
-DSH_TRUSTED_HOST=dsh.example.com:738
+DSH_TRUSTED_HOST=dsh.example.com
 ```
 
 Start DSH and keep its port bound to localhost:
@@ -45,7 +43,7 @@ Start DSH and keep its port bound to localhost:
 docker compose up -d --build
 ```
 
-Configure the router to forward external TCP port `738` to the server's internal TCP port `443`. Use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as the reverse-proxy starting point, then set its `server_name`, TLS certificate paths, and HTTPS listener.
+Configure the router to forward public TCP port `443` to the server's TCP port `443`. Use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as the reverse-proxy starting point, then set its `server_name`, TLS certificate paths, and HTTPS listener.
 
 Protect the entire Nginx site with Basic Auth before reloading it:
 
@@ -56,4 +54,4 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-The default image includes the DeepSeek adapter; other provider families require their adapter package and profile composition. The public URL is then `https://dsh.example.com:738`.
+The public URL is then `https://dsh.example.com`.

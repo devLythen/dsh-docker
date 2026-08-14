@@ -8,5 +8,3 @@ config/*
 !config/.gitkeep
 workspace/*
 !workspace/.gitkeep
-!config/settings.yaml
-!config/.credentials.yaml.example

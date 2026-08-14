@@ -38,4 +38,4 @@ DSH 会监视 `config/settings.yaml` 和 `config/.credentials.yaml`。提供方 
 
 ## Nginx 反向代理参考
 
-Nginx 不包含在 Compose 服务中。服务器已运行 Nginx 时，可将 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 作为配置起点。在 `.env` 中将 `DSH_TRUSTED_HOST` 设置为公网主机名，替换示例中的 `dsh.example.com`，然后校验并重载宿主机上的 Nginx 服务。
+Nginx 不包含在 Compose 服务中。公网部署时，先执行 `sudo apt-get install apache2-utils && sudo htpasswd -cB /etc/nginx/.htpasswd dsh-admin` 创建认证文件，再将 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 作为配置起点。示例会保护整个站点，并将已认证请求转换为 DSH 的 loopback authority，使 settings 和 credentials 敏感接口可用。不要移除认证层。

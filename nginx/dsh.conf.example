@@ -3,12 +3,19 @@ server {
     server_name dsh.example.com;
 
     location / {
+        auth_basic "DeepSeek Harness";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
         proxy_pass http://127.0.0.1:3080;
         proxy_http_version 1.1;
         proxy_buffering off;
         proxy_read_timeout 3600s;
 
-        proxy_set_header Host $http_host;
+        # The authenticated proxy is the trust boundary. DSH's privileged
+        # settings and credentials APIs remain loopback-only.
+        proxy_set_header Host 127.0.0.1:3080;
+        proxy_set_header Origin http://127.0.0.1:3080;
+        proxy_set_header X-Forwarded-Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;

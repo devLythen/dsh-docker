@@ -8,15 +8,10 @@ Requirements: Docker Engine and Docker Compose.
 
 ```sh
 cp .env.example .env
-cp config/.credentials.yaml.example config/.credentials.yaml
-chmod 600 config/.credentials.yaml
-```
-
-Set `DEEPSEEK_API_KEY` in `config/.credentials.yaml`, then start the service:
-
-```sh
 docker compose up -d
 ```
+
+The container starts without provider credentials. Add them later through the authenticated Web UI or by creating `config/.credentials.yaml` from its example.
 
 Open <http://localhost:3080>.
 
@@ -28,11 +23,11 @@ docker compose down
 
 ## Local data and live configuration
 
-- `config/settings.yaml` stores the provider URL and model settings.
-- `config/.credentials.yaml` stores API keys and is not tracked by Git.
+- `config/settings.yaml` stores optional provider URL and model settings.
+- `config/.credentials.yaml` optionally stores API keys and is not tracked by Git.
 - `workspace/` is mounted at `/workspace` and is the agent's working directory.
 
-DSH watches `config/settings.yaml` and `config/.credentials.yaml`. Changes to the provider URL or API key apply to subsequent requests without restarting the container. `.env` contains Compose-only settings such as the host port and Nginx trusted host.
+DSH watches the mounted settings and credential files when they exist. Changes to a provider URL or API key apply to subsequent requests without restarting the container. `.env` contains Compose-only settings such as the host port and Nginx trusted host.
 
 ## Public deployment
 
@@ -62,4 +57,4 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-The proxy must keep authentication enabled for every path and preserve the loopback `Host` and `Origin` headers from the example. This is required for DSH's privileged settings and credentials APIs. The public URL is then `https://dsh.example.com:738`.
+The proxy must keep authentication enabled for every path and preserve the loopback `Host` and `Origin` headers from the example. After signing in, configure the provider URL, credentials, and model in the Web UI. The default image includes the DeepSeek adapter; other provider families require their adapter package and profile composition. The public URL is then `https://dsh.example.com:738`.

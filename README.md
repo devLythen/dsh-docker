@@ -11,7 +11,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-After signing in to the authenticated Web UI, configure the provider URL, credentials, and model.
+Configure the provider URL, credentials, and model through the Web UI. Public deployments require the Nginx authentication prompt before this configuration is available.
 
 Open <http://localhost:3080>.
 
@@ -26,7 +26,7 @@ docker compose down
 - `config/` is mounted at `/dsh-home` and stores Harness state and user configuration.
 - `workspace/` is mounted at `/workspace` and is the agent's working directory.
 
-Configure provider settings after startup through the authenticated Web UI. DSH watches user configuration and credential files under `config/`; changes apply to subsequent requests without restarting the container. `.env` contains Compose-only settings such as the host port and Nginx trusted host.
+Configure provider settings after startup through the Web UI. Public deployments require the Nginx authentication prompt. DSH watches user configuration and credential files under `config/`; changes apply to subsequent requests without restarting the container. `.env` contains Compose-only settings such as the host port and Nginx trusted host.
 
 ## Public deployment
 

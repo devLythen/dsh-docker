@@ -24,7 +24,7 @@ docker compose down
 ## 本地数据与实时配置
 
 - `config/` 挂载到容器内的 `/dsh-home`，保存 Harness 状态和用户配置。
-- `workspace/` 挂载到容器内的 `/workspace`，作为 Agent 的工作目录。
+- `workspace/` 挂载到容器内的 `/home/node`，这是 Web UI 默认显示的工作区位置。
 
 启动后，通过 Web UI 配置提供方。公网部署需要先通过 Nginx 的认证提示。DSH 会监视 `config/` 下的用户配置和凭据文件；修改后会作用于后续请求，不需要重启容器。`.env` 只保存宿主端口、Nginx 信任主机等 Compose 配置。
 

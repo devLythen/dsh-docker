@@ -18,13 +18,13 @@ FROM node:24-bookworm-slim
 ENV DSH_HOME=/dsh-home
 ENV PATH=/opt/dsh/node_modules/.bin:$PATH
 
-WORKDIR /workspace
+WORKDIR /home/node
 
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes dumb-init git socat \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir --parents /dsh-home /workspace \
-    && chown --recursive node:node /dsh-home /workspace
+    && mkdir --parents /dsh-home /home/node \
+    && chown --recursive node:node /dsh-home /home/node
 
 COPY --from=dependencies --chown=node:node /opt/dsh/package.json /opt/dsh/package.json
 COPY --from=dependencies --chown=node:node /opt/dsh/node_modules /opt/dsh/node_modules

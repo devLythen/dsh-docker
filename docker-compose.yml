@@ -8,5 +8,5 @@ services:
       DSH_HOME: /dsh-home
     volumes:
       - ./config:/dsh-home
-      - ./workspace:/workspace
+      - ./workspace:/home/node
     restart: unless-stopped

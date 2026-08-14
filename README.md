@@ -8,9 +8,11 @@ Requirements: Docker Engine and Docker Compose.
 
 ```sh
 cp .env.example .env
+cp config/.credentials.yaml.example config/.credentials.yaml
+chmod 600 config/.credentials.yaml
 ```
 
-Set `DEEPSEEK_API_KEY` in `.env`, then start the service:
+Set `DEEPSEEK_API_KEY` in `config/.credentials.yaml`, then start the service:
 
 ```sh
 docker compose up -d
@@ -24,12 +26,13 @@ Stop the service with:
 docker compose down
 ```
 
-## Local data
+## Local data and live configuration
 
-- `config/` is mounted at `/dsh-home` and stores Harness configuration and session data.
+- `config/settings.yaml` stores the provider URL and model settings.
+- `config/.credentials.yaml` stores API keys and is not tracked by Git.
 - `workspace/` is mounted at `/workspace` and is the agent's working directory.
 
-Edit files under `config/` on the host. The container uses the changes after restart; configuration files supported by DeepSeek Harness may also be reloaded by the application.
+DSH watches `config/settings.yaml` and `config/.credentials.yaml`. Changes to the provider URL or API key apply to subsequent requests without restarting the container. `.env` contains Compose-only settings such as the host port and Nginx trusted host.
 
 To use another host port, set `DSH_PORT` in `.env` before starting the service.
 

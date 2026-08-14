@@ -8,9 +8,11 @@
 
 ```sh
 cp .env.example .env
+cp config/.credentials.yaml.example config/.credentials.yaml
+chmod 600 config/.credentials.yaml
 ```
 
-在 `.env` 中填写 `DEEPSEEK_API_KEY`，然后启动服务：
+在 `config/.credentials.yaml` 中填写 `DEEPSEEK_API_KEY`，然后启动服务：
 
 ```sh
 docker compose up -d
@@ -24,12 +26,13 @@ docker compose up -d
 docker compose down
 ```
 
-## 本地数据
+## 本地数据与实时配置
 
-- `config/` 挂载到容器内的 `/dsh-home`，保存 Harness 配置和会话数据。
+- `config/settings.yaml` 保存提供方 URL 和模型配置。
+- `config/.credentials.yaml` 保存 API Key，不会被 Git 跟踪。
 - `workspace/` 挂载到容器内的 `/workspace`，作为 Agent 的工作目录。
 
-可以直接修改宿主机 `config/` 下的文件。重启服务后容器会使用修改后的配置；DeepSeek Harness 支持热加载的配置文件仍按应用自身行为处理。
+DSH 会监视 `config/settings.yaml` 和 `config/.credentials.yaml`。提供方 URL 或 API Key 修改后会作用于后续请求，不需要重启容器。`.env` 只保存宿主端口、Nginx 信任主机等 Compose 配置。
 
 需要更换宿主机端口时，在启动服务前于 `.env` 中设置 `DSH_PORT`。
 

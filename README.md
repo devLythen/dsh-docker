@@ -49,7 +49,7 @@ Protect the entire Nginx site with Basic Auth before reloading it:
 
 ```sh
 sudo apt-get install apache2-utils
-sudo htpasswd -cB /etc/nginx/.htpasswd dsh-admin
+sudo htpasswd -cB /etc/nginx/.htpasswd admin
 sudo nginx -t
 sudo systemctl reload nginx
 ```

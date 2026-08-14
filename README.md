@@ -1,10 +1,10 @@
 # dsh-docker
 
-Docker template for running the DeepSeek Harness Web UI.
+Docker template for running the DeepSeek Harness Web UI. [简体中文](README.zh.md)
 
 ## Quickstart
 
-Requirements: Docker Engine and Docker Compose.
+Requirements: Docker Engine and Docker Compose. Keep `bun.lock` committed; the Docker build copies it and runs `bun install --frozen-lockfile`.
 
 ```sh
 cp .env.example .env

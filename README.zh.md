@@ -1,10 +1,10 @@
 # dsh-docker
 
-用于运行 DeepSeek Harness Web UI 的 Docker 模板。
+用于运行 DeepSeek Harness Web UI 的 Docker 模板。[English](README.md)
 
 ## 快速启动
 
-依赖：Docker Engine 和 Docker Compose。
+依赖：Docker Engine 和 Docker Compose。请保留已提交的 `bun.lock`；Docker 构建会复制它，并使用 `bun install --frozen-lockfile` 安装依赖。
 
 ```sh
 cp .env.example .env

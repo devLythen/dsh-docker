@@ -2,7 +2,7 @@
 
 Docker template for running the DeepSeek Harness Web UI.
 
-## Usage
+## Quickstart
 
 Requirements: Docker Engine and Docker Compose.
 
@@ -34,8 +34,32 @@ docker compose down
 
 DSH watches `config/settings.yaml` and `config/.credentials.yaml`. Changes to the provider URL or API key apply to subsequent requests without restarting the container. `.env` contains Compose-only settings such as the host port and Nginx trusted host.
 
-To use another host port, set `DSH_PORT` in `.env` before starting the service.
+## Public deployment
 
-## Nginx reverse proxy reference
+Public deployment requires a DNS record, a TLS certificate, Nginx, and an authenticated reverse proxy. Do not expose the Docker port directly to the Internet.
 
-Nginx is not included in the Compose stack. For a public deployment, create an authentication file with `sudo apt-get install apache2-utils && sudo htpasswd -cB /etc/nginx/.htpasswd dsh-admin`, then use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as a starting point. The example protects the whole site and rewrites authenticated requests to DSH's loopback authority so privileged settings and credentials APIs remain available. Do not remove the authentication layer.
+Set the public authority in `.env`. Include the external port when it is not the default HTTPS port:
+
+```env
+DSH_PORT=3080
+DSH_TRUSTED_HOST=dsh.example.com:738
+```
+
+Start DSH and keep its port bound to localhost:
+
+```sh
+docker compose up -d --build
+```
+
+Configure the router to forward external TCP port `738` to the server's internal TCP port `443`. Use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as the reverse-proxy starting point, then set its `server_name`, TLS certificate paths, and HTTPS listener.
+
+Protect the entire Nginx site with Basic Auth before reloading it:
+
+```sh
+sudo apt-get install apache2-utils
+sudo htpasswd -cB /etc/nginx/.htpasswd dsh-admin
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+The proxy must keep authentication enabled for every path and preserve the loopback `Host` and `Origin` headers from the example. This is required for DSH's privileged settings and credentials APIs. The public URL is then `https://dsh.example.com:738`.

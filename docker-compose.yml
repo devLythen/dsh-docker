@@ -1,0 +1,12 @@
+services:
+  dsh:
+    build: .
+    ports:
+      - "127.0.0.1:${DSH_PORT:-3080}:3080"
+    env_file: .env
+    environment:
+      DSH_HOME: /dsh-home
+    volumes:
+      - ./config:/dsh-home
+      - ./workspace:/workspace
+    restart: unless-stopped

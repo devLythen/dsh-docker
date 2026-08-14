@@ -1,0 +1,12 @@
+# Build context
+.git
+.gitignore
+.env
+config
+workspace
+node_modules
+
+# Documentation and editor files
+README*
+.vscode
+.idea

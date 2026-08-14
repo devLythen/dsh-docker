@@ -1,0 +1,10 @@
+.env
+.DS_Store
+.idea/
+.vscode/
+
+# Local Harness data and agent workspaces.
+config/*
+!config/.gitkeep
+workspace/*
+!workspace/.gitkeep

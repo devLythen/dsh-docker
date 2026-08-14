@@ -1,0 +1,9 @@
+{
+  "name": "dsh-docker",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.14",
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.0-rc.6"
+  }
+}

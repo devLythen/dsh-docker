@@ -85,11 +85,5 @@ sudo systemctl reload nginx
 - A successful login sets a `dsh_session` cookie (HttpOnly + SameSite=Lax, plus Secure over HTTPS) that expires after `AUTH_TTL_HOURS` (default 24); afterwards the user is sent back to the login page.
 - Sessions live in the `auth` container's memory: `docker compose restart auth` (or rebooting the host) logs everyone out immediately.
 - 5 consecutive wrong passwords lock that source IP for 15 minutes.
-- Optional hardening: layer Basic Auth on top of the session cookie (see the comments inside `nginx/dsh.conf.example`):
-
-```sh
-sudo apt-get install apache2-utils
-sudo htpasswd -cB /etc/nginx/.htpasswd admin
-```
 
 The public URL is then `https://dsh.example.com`.

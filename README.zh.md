@@ -85,11 +85,5 @@ sudo systemctl reload nginx
 - 登录后获得 `dsh_session` Cookie（HttpOnly + SameSite=Lax，HTTPS 下另加 Secure），有效期 `AUTH_TTL_HOURS`（默认 24 小时）；到期后自动跳回登录页。
 - 会话保存在 `auth` 容器内存中：`docker compose restart auth` 或重启宿主机即全员下线。
 - 同一来源 IP 连续 5 次密码错误会被锁定 15 分钟。
-- 可选加固：在 Nginx 上叠加 Basic Auth（见 `nginx/dsh.conf.example` 内注释）：
-
-```sh
-sudo apt-get install apache2-utils
-sudo htpasswd -cB /etc/nginx/.htpasswd admin
-```
 
 最终公网地址为 `https://dsh.example.com`。

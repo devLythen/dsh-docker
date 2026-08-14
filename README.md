@@ -38,4 +38,4 @@ To use another host port, set `DSH_PORT` in `.env` before starting the service.
 
 ## Nginx reverse proxy reference
 
-Nginx is not included in the Compose stack. For a server that already runs Nginx, use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as a starting point. Set `DSH_TRUSTED_HOST` in `.env` to the public hostname, replace `dsh.example.com` in the example, then validate and reload the host's Nginx service.
+Nginx is not included in the Compose stack. For a server that already runs Nginx, use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as a starting point. Set `DSH_TRUSTED_HOST` to the public authority, including its non-default port, replace `dsh.example.com` in the example, then validate and reload the host's Nginx service.

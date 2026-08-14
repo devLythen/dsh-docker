@@ -9,7 +9,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-通过 Web UI 配置提供方 URL、凭据和模型。公网部署需要先通过 Nginx 的认证提示，才能使用这些配置功能。
+通过 Web UI 配置提供方 URL、凭据和模型。公网部署需要先通过 Nginx 的会话登录页（默认 24 小时过期），才能使用这些配置功能。
 
 打开 <http://localhost:3080>。
 
@@ -24,34 +24,53 @@ docker compose down
 - `config/` 挂载到容器内的 `/dsh-home`，保存 Harness 状态和用户配置。
 - `workspace/` 挂载到容器内的 `/home/node`，这是 Web UI 默认显示的工作区位置。
 
-启动后，通过 Web UI 配置提供方。公网部署需要先通过 Nginx 的认证提示。DSH 会监视 `config/` 下的用户配置和凭据文件；修改后会作用于后续请求，不需要重启容器。`.env` 只保存宿主端口、Nginx 信任主机等 Compose 配置。
+启动后，通过 Web UI 配置提供方。公网部署需要先通过 Nginx 的会话登录页。DSH 会监视 `config/` 下的用户配置和凭据文件；修改后会作用于后续请求，不需要重启容器。`.env` 只保存宿主端口、Nginx 信任主机等 Compose 配置。
 
 ## 公网部署
 
 公网部署需要 DNS 记录、TLS 证书、Nginx 和带认证的反向代理。不要将 Docker 端口直接暴露到公网。
 
-在 `.env` 中设置公网 authority：
+公网认证采用「登录服务 + 会话 Cookie」：Nginx 通过 `auth_request` 校验每个请求的会话 Cookie，无效或过期时跳转到 `/login/` 登录页。登录会话默认 **24 小时**过期；重启 `auth` 服务会立即使全部会话失效。
+
+在 `.env` 中设置公网 authority 与登录密码：
 
 ```env
 DSH_PORT=3080
 DSH_TRUSTED_HOST=dsh.example.com
+AUTH_PASSWORD=<strong random password>
+# AUTH_TTL_HOURS=24
 ```
 
-启动 DSH，并保持宿主端口只监听本机：
+生成密码：
+
+```sh
+openssl rand -base64 24 | tr '+/' '-_' | tr -d '='
+```
+
+启动 DSH 与登录服务，并保持宿主端口只监听本机：
 
 ```sh
 docker compose up -d --build
 ```
 
-以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点，然后设置 `server_name`、TLS 证书路径和 HTTPS 监听器。
+以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点，设置 `server_name`、TLS 证书路径和 HTTPS 监听器，然后重载 Nginx：
 
-重载 Nginx 前，先为整个站点启用 Basic Auth：
+```sh
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 认证行为
+
+- 首次访问任意页面会跳到 `/login/`，输入 `.env` 中的 `AUTH_PASSWORD`。
+- 登录后获得 `dsh_session` Cookie（HttpOnly + SameSite=Lax，HTTPS 下另加 Secure），有效期 `AUTH_TTL_HOURS`（默认 24 小时）；到期后自动跳回登录页。
+- 会话保存在 `auth` 容器内存中：`docker compose restart auth` 或重启宿主机即全员下线。
+- 同一来源 IP 连续 5 次密码错误会被锁定 15 分钟。
+- 可选加固：在 Nginx 上叠加 Basic Auth（见 `nginx/dsh.conf.example` 内注释）：
 
 ```sh
 sudo apt-get install apache2-utils
 sudo htpasswd -cB /etc/nginx/.htpasswd admin
-sudo nginx -t
-sudo systemctl reload nginx
 ```
 
 最终公网地址为 `https://dsh.example.com`。

@@ -13,6 +13,15 @@
 # ports (socat 3080 -> dsh web 3081, auth 8081) are private and never appear
 # on the host.
 #
+# Authority strategy (why two app locations):
+# DSH's browser-trust fence pins the whole configuration plane — settings,
+# credentials, llm.discoverModels, agent presets, native dialogs — to LOOPBACK
+# authority on purpose: trustedHosts is a DNS-rebinding fence, not an auth
+# layer, and the authenticated proxy is the trust boundary. So /api (all RPC
+# plus the /api/events.* WebSocket streams) presents the loopback authority
+# and passes every fence level, while / (the static surface) forwards the
+# public authority untouched.
+#
 # Before reloading, set `server_name`, the TLS certificate paths, and the
 # HTTPS listener (the file below starts as the plain-HTTP baseline).
 # Requires nginx >= 1.5.4 with ngx_http_auth_request_module (default in
@@ -50,8 +59,11 @@ server {
 
     # ---- Protected application ----
 
-    location / {
-
+    # All RPC channels and the /api/events.* WebSocket streams. Presenting the
+    # loopback authority makes the browser-trust fence pass at every level,
+    # including the loopback-pinned configuration plane (settings, credentials,
+    # llm.discoverModels); auth_request below is the actual access control.
+    location /api/ {
         auth_request /auth;
         error_page 401 = @login;
 
@@ -60,16 +72,32 @@ server {
         proxy_buffering off;
         proxy_read_timeout 3600s;
 
-        # Preserve the public authority so DSH's browser trust fence matches
-        # DSH_TRUSTED_HOST. The auth_request above is the access boundary.
-        proxy_set_header Host $http_host;
-        proxy_set_header Origin $scheme://$http_host;
+        proxy_set_header Host $dsh_backend;
+        proxy_set_header Origin http://$dsh_backend;
         proxy_set_header X-Forwarded-Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+    }
+
+    # The static surface: no fence applies, so forward the public authority
+    # (including any non-standard port) untouched.
+    location / {
+        auth_request /auth;
+        error_page 401 = @login;
+
+        proxy_pass http://$dsh_backend;
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_read_timeout 3600s;
+
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # missing or expired session -> login page, then back to the deep link

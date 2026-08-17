@@ -22,7 +22,7 @@ docker compose down
 ## Local data and live configuration
 
 - `config/` is mounted at `/dsh-home` and stores Harness state and user configuration.
-- `workspace/` is mounted at `/home/node`, which is the default workspace location shown by the Web UI.
+- `workspace/` is mounted at `/home/node` (the Web UI's default workspace location); set `DSH_WORKSPACE` in `.env` to mount a custom host directory instead.
 - `dsh plugin` manages profile plugins through pnpm (bundled in the image), e.g. `docker compose exec dsh dsh plugin --profile web add <package>`.
 
 Configure provider settings after startup through the Web UI. Public deployments require the Nginx session login first. DSH watches user configuration and credential files under `config/`; changes apply to subsequent requests without restarting the container. `.env` contains Compose-only settings such as the host port and Nginx trusted host.

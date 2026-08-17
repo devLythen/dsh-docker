@@ -9,7 +9,7 @@ services:
       DSH_HOME: /dsh-home
     volumes:
       - ./config:/dsh-home
-      - ./workspace:/home/node
+      - ${DSH_WORKSPACE:-./workspace}:/home/node
     restart: unless-stopped
 
   # Session-auth login service behind the host Nginx `auth_request`.

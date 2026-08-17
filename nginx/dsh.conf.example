@@ -1,10 +1,12 @@
 # DeepSeek Harness — public reverse proxy with expiring session authentication.
 #
-# Every request must carry a valid dsh_session cookie; Nginx checks it with an
-# internal `auth_request` subrequest against the `auth` compose service
-# (loopback-only). Requests without a valid cookie are redirected to /login/.
-# Sessions expire after AUTH_TTL_HOURS (default 24) and never survive an
-# `auth` service restart.
+# Every /api request must carry a valid dsh_session cookie; Nginx checks it
+# with an internal `auth_request` subrequest against the `auth` compose
+# service (loopback-only). Requests without a valid cookie are redirected to
+# /login/. Sessions expire after AUTH_TTL_HOURS (default 24) and never
+# survive an `auth` service restart. The static surface (HTML/JS/manifest)
+# carries no data and stays unauthenticated so credential-less subresource
+# fetches never bounce to the login page.
 #
 # Ports are centralized in the constants block below — the ONLY port literals
 # in this file. They mirror DSH_PORT / AUTH_PORT from .env; run
@@ -82,12 +84,14 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
-    # The static surface: no fence applies, so forward the public authority
-    # (including any non-standard port) untouched.
+    # The static surface (SPA shell: HTML, JS bundles, manifest, assets).
+    # Served without the auth gate on purpose: it carries no data — every
+    # byte of session content flows through the gated /api below — and a 401
+    # redirect here breaks credential-less subresource fetches (the PWA
+    # manifest ends up parsing the login page as JSON and floods the console
+    # with "Manifest: Syntax error"). The public authority passes through
+    # untouched, including any non-standard port.
     location / {
-        auth_request /auth;
-        error_page 401 = @login;
-
         proxy_pass http://$dsh_backend;
         proxy_http_version 1.1;
         proxy_buffering off;

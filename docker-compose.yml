@@ -1,6 +1,7 @@
 services:
   dsh:
     build: .
+    container_name: dsh
     ports:
       - "127.0.0.1:${DSH_PORT:-3080}:3080"
     env_file: .env
@@ -18,6 +19,7 @@ services:
   # published to loopback under AUTH_PORT from .env.
   auth:
     image: node:24-bookworm-slim
+    container_name: dsh-auth
     user: node
     init: true
     working_dir: /app

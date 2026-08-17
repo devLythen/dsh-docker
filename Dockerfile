@@ -22,6 +22,7 @@ WORKDIR /home/node
 
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes dumb-init git socat \
+    && npm install --global pnpm@10 \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir --parents /dsh-home /home/node \
     && chown --recursive node:node /dsh-home /home/node

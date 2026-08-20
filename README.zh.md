@@ -61,6 +61,8 @@ sudo nginx -t && sudo systemctl reload nginx
 
 不要将 `/api/` 的 `proxy_set_header Host $dsh_backend;` 或 `proxy_set_header Origin http://$dsh_backend;` 改回公网 authority；只改其中一个同样会让模型页的配置接口返回 `403`。
 
+镜像还会为 DSH 浏览器客户端应用受保护的兼容补丁，使经过认证的公网 UI 能够加载和编辑设置文档。该补丁不放宽 DSH 的网络监听或 Nginx 认证；仅当 Compose 端口保持回环监听，且所有公网 `/api/` 请求都经过已认证的 Nginx location 时才安全。上游版本若改变预期的客户端实现，镜像构建会失败，必须先完成兼容性审查。
+
 DSH 镜像更新不会丢失 `config/` 和 profile 插件，但插件不会自动升级。每次更新后用 `docker compose exec dsh dsh plugin --profile web list` 验证插件；确认与新版 DSH 兼容后，再单独更新插件。
 
 ## 公网部署

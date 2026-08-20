@@ -21,8 +21,9 @@
 # authority on purpose: trustedHosts is a DNS-rebinding fence, not an auth
 # layer, and the authenticated proxy is the trust boundary. So /api (all RPC
 # plus the /api/events.* WebSocket streams) presents the loopback authority
-# and passes every fence level, while / (the static surface) forwards the
-# public authority untouched.
+# and passes every fence level. The image's guarded client compatibility patch
+# relies on this authenticated proxy boundary; / (the static surface) forwards
+# the public authority untouched.
 #
 # Before reloading, set `server_name`, the TLS certificate paths, and the
 # HTTPS listener (the file below starts as the plain-HTTP baseline).

@@ -61,6 +61,8 @@ sudo nginx -t && sudo systemctl reload nginx
 
 Do not change `/api/`'s `proxy_set_header Host $dsh_backend;` or `proxy_set_header Origin http://$dsh_backend;` back to the public authority. Changing either one still makes the Models page configuration API return `403`.
 
+The image also applies a guarded compatibility patch for DSH's browser client so the authenticated public UI can load and edit its settings document. The patch does not relax DSH's network binding or Nginx authentication and is only safe while the Compose port remains loopback-only and every public `/api/` request goes through the authenticated Nginx location. It fails the image build when an upstream release changes the expected client implementation, requiring a deliberate compatibility review.
+
 `config/` and profile plugins persist through a DSH image update, but plugins are not upgraded automatically. Validate them after an update with `docker compose exec dsh dsh plugin --profile web list`, and update them separately only after checking their DSH compatibility.
 
 ## Public deployment

@@ -15,6 +15,8 @@ WORKDIR /opt/dsh
 # package manifests are intentionally not part of this build.
 RUN printf '%s\n' '{"private":true}' > package.json \
     && bun add --exact @deepseek-ai/dsh@latest
+COPY scripts/patch-dsh-web-client.mjs /opt/dsh/scripts/patch-dsh-web-client.mjs
+RUN node /opt/dsh/scripts/patch-dsh-web-client.mjs
 
 FROM node:24-bookworm-slim
 

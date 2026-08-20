@@ -5,6 +5,8 @@
 config
 workspace
 node_modules
+package.json
+bun.lock
 
 # Documentation and editor files
 README*

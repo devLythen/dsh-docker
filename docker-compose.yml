@@ -1,6 +1,11 @@
 services:
   dsh:
-    build: .
+    build:
+      context: .
+      no_cache: true
+    # Rebuild this service on every `docker compose up` so the Dockerfile can
+    # resolve the current @deepseek-ai/dsh@latest release.
+    pull_policy: build
     container_name: dsh
     ports:
       - "127.0.0.1:${DSH_PORT:-3080}:3080"

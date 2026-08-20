@@ -10,8 +10,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/dsh
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
+
+# Resolve the current npm `latest` release inside the image. The repository's
+# package manifests are intentionally not part of this build.
+RUN printf '%s\n' '{"private":true}' > package.json \
+    && bun add --exact @deepseek-ai/dsh@latest
 
 FROM node:24-bookworm-slim
 

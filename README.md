@@ -46,6 +46,14 @@ AUTH_PORT=8081  # login/session service, published on host 127.0.0.1
 
 Port-change procedure: edit `.env` → `docker compose up -d` → re-render (or sync the constants block) → `sudo nginx -t && sudo systemctl reload nginx`.
 
+## Updating DSH
+
+Every `docker compose up` rebuilds the `dsh` service. During the image build, the same `oven/bun:1.3.14` used by `Dockerfile` resolves and installs `@deepseek-ai/dsh@latest` inside the image. The build does not read `package.json` or `bun.lock` from the repository; the temporary manifest and dependencies exist only during the build and in the resulting image.
+
+Startup therefore requires access to the npm registry and may take longer than reusing an existing image. This policy automatically accepts new DSH releases, so compatibility is determined by the upstream release.
+
+`config/` and profile plugins persist through a DSH image update, but plugins are not upgraded automatically. Validate them after an update with `docker compose exec dsh dsh plugin --profile web list`, and update them separately only after checking their DSH compatibility.
+
 ## Public deployment
 
 Public deployment requires a DNS record, a TLS certificate, Nginx, and an authenticated reverse proxy. Do not expose the Docker port directly to the Internet.
@@ -70,7 +78,7 @@ openssl rand -base64 24 | tr '+/' '-_' | tr -d '='
 Start DSH and the login service, and keep the host ports bound to localhost:
 
 ```sh
-docker compose up -d --build
+docker compose up -d
 ```
 
 Use [`nginx/dsh.conf.example`](nginx/dsh.conf.example) as the reverse-proxy starting point (ports — see “Ports” above), then set its `server_name`, TLS certificate paths, and HTTPS listener, and reload Nginx:

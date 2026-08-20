@@ -46,6 +46,14 @@ AUTH_PORT=8081  # 登录/会话服务，发布到宿主 127.0.0.1
 
 改端口流程：修改 `.env` → `docker compose up -d` → 重新渲染（或同步常量块）→ `sudo nginx -t && sudo systemctl reload nginx`。
 
+## DSH 更新
+
+每次执行 `docker compose up` 时，Compose 都会重新构建 `dsh` 服务，并在镜像内部使用与 `Dockerfile` 一致的 `oven/bun:1.3.14` 解析并安装 `@deepseek-ai/dsh@latest`。构建不读取仓库中的 `package.json` 或 `bun.lock`；临时 manifest 和依赖只存在于镜像构建过程及最终镜像中。
+
+因此启动需要能够访问 npm registry，且每次启动可能比复用已有镜像花费更长时间。该策略会自动接受 DSH 的新版本，版本兼容性由上游发布决定。
+
+DSH 镜像更新不会丢失 `config/` 和 profile 插件，但插件不会自动升级。每次更新后用 `docker compose exec dsh dsh plugin --profile web list` 验证插件；确认与新版 DSH 兼容后，再单独更新插件。
+
 ## 公网部署
 
 公网部署需要 DNS 记录、TLS 证书、Nginx 和带认证的反向代理。不要将 Docker 端口直接暴露到公网。
@@ -70,7 +78,7 @@ openssl rand -base64 24 | tr '+/' '-_' | tr -d '='
 启动 DSH 与登录服务，并保持宿主端口只监听本机：
 
 ```sh
-docker compose up -d --build
+docker compose up -d
 ```
 
 以 [`nginx/dsh.conf.example`](nginx/dsh.conf.example) 为反向代理起点（端口见「端口配置」一节），设置 `server_name`、TLS 证书路径和 HTTPS 监听器，然后重载 Nginx：

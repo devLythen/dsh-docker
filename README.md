@@ -52,6 +52,15 @@ Every `docker compose up` rebuilds the `dsh` service. During the image build, th
 
 Startup therefore requires access to the npm registry and may take longer than reusing an existing image. This policy automatically accepts new DSH releases, so compatibility is determined by the upstream release.
 
+Public deployments must also synchronize the host Nginx configuration. DSH pins its model, settings, and credential APIs to loopback same-origin; `nginx/dsh.conf.example` satisfies that requirement by forwarding authenticated `/api/` requests with both loopback `Host` and `Origin` values. After updating the template or migrating from an earlier configuration, render and load it again:
+
+```sh
+./scripts/render-nginx-conf.sh | sudo tee /etc/nginx/sites-available/dsh.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Do not change `/api/`'s `proxy_set_header Host $dsh_backend;` or `proxy_set_header Origin http://$dsh_backend;` back to the public authority. Changing either one still makes the Models page configuration API return `403`.
+
 `config/` and profile plugins persist through a DSH image update, but plugins are not upgraded automatically. Validate them after an update with `docker compose exec dsh dsh plugin --profile web list`, and update them separately only after checking their DSH compatibility.
 
 ## Public deployment

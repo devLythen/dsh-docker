@@ -52,6 +52,15 @@ AUTH_PORT=8081  # 登录/会话服务，发布到宿主 127.0.0.1
 
 因此启动需要能够访问 npm registry，且每次启动可能比复用已有镜像花费更长时间。该策略会自动接受 DSH 的新版本，版本兼容性由上游发布决定。
 
+公网部署还必须同步宿主机 Nginx 配置。DSH 将模型、设置和凭据 API 限制为回环同源，`nginx/dsh.conf.example` 通过对已认证的 `/api/` 请求同时传递回环 `Host` 和 `Origin` 来满足该限制。升级模板或从较早配置迁移后，重新渲染并加载配置：
+
+```sh
+./scripts/render-nginx-conf.sh | sudo tee /etc/nginx/sites-available/dsh.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+不要将 `/api/` 的 `proxy_set_header Host $dsh_backend;` 或 `proxy_set_header Origin http://$dsh_backend;` 改回公网 authority；只改其中一个同样会让模型页的配置接口返回 `403`。
+
 DSH 镜像更新不会丢失 `config/` 和 profile 插件，但插件不会自动升级。每次更新后用 `docker compose exec dsh dsh plugin --profile web list` 验证插件；确认与新版 DSH 兼容后，再单独更新插件。
 
 ## 公网部署
